@@ -52,6 +52,7 @@ DE = {
         "{n} Änderung(en) geplant, {u} bereits korrekt benannt.",
     "Titel enthielt einen Schraegstrich - wurde durch \" - \" ersetzt.":
         "Titel enthielt einen Schrägstrich - wurde durch \" - \" ersetzt.",
+    "Das aendert die Originaldatei.": "Das ändert die Originaldatei.",
 }
 EN: dict[str, str] = {}
 

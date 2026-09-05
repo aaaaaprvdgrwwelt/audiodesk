@@ -26,6 +26,8 @@ from .metapanel import MetaPanel
 from .player import PlayerBar
 from .renamedialog import RenameDialog
 from .settingsdialog import SettingsDialog
+from .tags import TrackTags
+from .tags import write_tags as write_track_tags
 from .thumbs import CoverLoader
 
 TILE_W = 140
@@ -264,6 +266,8 @@ class MainWindow(QMainWindow):
              target=self.tabs, shortcut_context=Qt.WidgetWithChildrenShortcut)
         a.add("rename", "Umbenennen …", "Ctrl+R", self.rename_preview,
              tool_icon("rename"))
+        a.add("save_metadata", "Metadaten in Datei speichern …", "Ctrl+S",
+             self.write_metadata_to_file, tool_icon("check"))
         a.add("delete", "Loeschen …", "Del", self.delete_selected,
              tool_icon("delete"), target=self.tabs,
              shortcut_context=Qt.WidgetWithChildrenShortcut)
@@ -323,6 +327,7 @@ class MainWindow(QMainWindow):
 
         menu = bar.addMenu(_("&Bearbeiten"))
         menu.addAction(a["rename"])
+        menu.addAction(a["save_metadata"])
         menu.addAction(a["delete"])
 
         menu = bar.addMenu(_("&Ansicht"))
@@ -576,6 +581,49 @@ class MainWindow(QMainWindow):
             self._play_item(siblings[index + 1])
 
     # --- Umbenennen ------------------------------------------------------
+    # --- Metadaten in die Datei zurueckschreiben --------------------------
+    def write_metadata_to_file(self) -> None:
+        """Anders als Umbenennen/Loeschen aendert das die Originaldatei
+        selbst - deshalb ausdruecklich bestaetigen lassen und nie
+        automatisch beim Scannen/Zuordnen aufrufen."""
+        items = self._selected_items()
+        if not items:
+            QMessageBox.information(
+                self, _("Metadaten speichern …"),
+                _("Bitte mindestens eine Datei waehlen."))
+            return
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Warning)
+        box.setWindowTitle(_("Metadaten speichern …"))
+        box.setText(
+            _("Metadaten von {n} Datei(en) direkt in die Datei schreiben?")
+            .format(n=len(items)))
+        box.setInformativeText(_("Das aendert die Originaldatei."))
+        box.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+        box.setDefaultButton(QMessageBox.Cancel)
+        if box.exec() != QMessageBox.Yes:
+            return
+
+        errors: list[str] = []
+        for item in items:
+            path = Path(item.path)
+            tags = TrackTags(
+                title=item.title, artist=item.artist, album=item.album,
+                album_artist=item.album_artist, track_number=item.track_number,
+                year=item.year, genre=item.genre)
+            try:
+                write_track_tags(path, tags)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"{path.name}: {exc}")
+        if errors:
+            QMessageBox.warning(
+                self, _("Metadaten speichern …"),
+                _("Nicht alles konnte gespeichert werden:") + "\n"
+                + "\n".join(errors))
+        else:
+            QMessageBox.information(
+                self, _("Metadaten speichern …"), _("Metadaten gespeichert."))
+
     def rename_preview(self) -> None:
         items = self._selected_items()
         if not items:
@@ -636,6 +684,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self.actions_map["play"])
         menu.addSeparator()
         menu.addAction(self.actions_map["rename"])
+        menu.addAction(self.actions_map["save_metadata"])
         menu.addSeparator()
         menu.addAction(self.actions_map["delete"])
         menu.exec(self.track_list.viewport().mapToGlobal(pos))
@@ -648,6 +697,7 @@ class MainWindow(QMainWindow):
         menu.addAction(self.actions_map["play"])
         menu.addSeparator()
         menu.addAction(self.actions_map["rename"])
+        menu.addAction(self.actions_map["save_metadata"])
         menu.addSeparator()
         menu.addAction(self.actions_map["delete"])
         menu.exec(self.chapter_table.viewport().mapToGlobal(pos))

@@ -74,6 +74,33 @@ def read_tags(path: Path) -> TrackTags:
         duration_ms=duration_ms)
 
 
+def write_tags(path: Path, tags: TrackTags) -> None:
+    """Tags direkt in die Datei zurueckschreiben - ueber mutagens
+    Easy-Schnittstelle, die fuer alle unterstuetzten Formate einheitlich
+    funktioniert. Nur auf ausdruecklichen Nutzerwunsch aufrufen, nie
+    automatisch beim Scannen/Zuordnen."""
+    easy = mutagen.File(str(path), easy=True)
+    if easy is None:
+        raise ValueError(f"Konnte {path} nicht als Audiodatei oeffnen")
+
+    easy["title"] = tags.title or ""
+    easy["artist"] = tags.artist or ""
+    easy["album"] = tags.album or ""
+    easy["genre"] = tags.genre or ""
+    if tags.track_number is not None:
+        easy["tracknumber"] = str(tags.track_number)
+    if tags.year is not None:
+        easy["date"] = str(tags.year)
+    # Nicht jedes Format kennt "albumartist" ueber die Easy-Schnittstelle
+    # (z. B. manche OGG-Varianten) - dann bleibt das Feld einfach unbelegt.
+    if tags.album_artist:
+        try:
+            easy["albumartist"] = tags.album_artist
+        except (KeyError, ValueError):
+            pass
+    easy.save()
+
+
 def cover_bytes(path: Path) -> bytes | None:
     """Eingebettetes Cover, je nach Format an anderer Stelle verstaut - kein
     einheitliches mutagen-Feld dafuer, deshalb Format-spezifisch."""

@@ -4,3 +4,10 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+
+# Beim Paketbau erzeugt - Symbole entstehen aus dem SVG.
+packaging/audiodesk.ico
+packaging/audiodesk.icns
+packaging/audiodesk.iconset/
+packaging/ico-teile/
+selftest.log

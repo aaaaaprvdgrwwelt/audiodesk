@@ -53,6 +53,13 @@ DE = {
     "Titel enthielt einen Schraegstrich - wurde durch \" - \" ersetzt.":
         "Titel enthielt einen Schrägstrich - wurde durch \" - \" ersetzt.",
     "Das aendert die Originaldatei.": "Das ändert die Originaldatei.",
+    "iTunes (Hoerbuecher)": "iTunes (Hörbücher)",
+    "Einzige eingebaute Hoerbuch-Quelle - MusicBrainz/Discogs/"
+    "Last.fm sind reine Musikdatenbanken und werden fuer Hoerbuecher "
+    "nicht befragt.":
+        "Einzige eingebaute Hörbuch-Quelle - MusicBrainz/Discogs/"
+        "Last.fm sind reine Musikdatenbanken und werden für Hörbücher "
+        "nicht befragt.",
 }
 EN: dict[str, str] = {}
 

@@ -23,17 +23,17 @@ HELP_HTML = """
 </ol>
 
 <h2>Welche Quelle wofuer?</h2>
-<p>Alle drei Quellen sind optional und lassen sich einzeln unter
-<b>Einstellungen &rarr; Quellen</b> ein- und ausschalten. Fuer Hoerbuecher
-ist die Abdeckung bei allen dreien deutlich luecklicher als bei Musik, da
-es in erster Linie Musikdatenbanken sind - ein Treffer ist dort keine
-Garantie.</p>
+<p>Alle vier Quellen sind optional und lassen sich einzeln unter
+<b>Einstellungen &rarr; Quellen</b> ein- und ausschalten. MusicBrainz,
+Discogs und Last.fm sind reine <b>Musik</b>datenbanken und werden fuer
+Hoerbuch-Kapitel gar nicht erst befragt (siehe naechster Abschnitt) - dafuer
+gibt es die eigene iTunes-Hoerbuch-Quelle.</p>
 
-<h3>MusicBrainz - empfohlen, kein Key noetig</h3>
+<h3>MusicBrainz (Musik) - empfohlen, kein Key noetig</h3>
 <p>Titel, Interpret, Album und ein Cover (ueber das Cover Art Archive),
 gesucht ueber Titel und Interpret.</p>
 
-<h3>Discogs - Zweitquelle, braucht einen kostenlosen Zugriffs-Token</h3>
+<h3>Discogs (Musik) - Zweitquelle, braucht einen kostenlosen Zugriffs-Token</h3>
 <ol>
 <li>Konto auf <a href="https://www.discogs.com">discogs.com</a> anlegen.</li>
 <li>Unter <a href="https://www.discogs.com/settings/developers">discogs.com/settings/developers</a>
@@ -44,11 +44,22 @@ gesucht ueber Titel und Interpret.</p>
 ("Interpret - Titel") - die Trennung ist deshalb ein Ratewert und nicht
 immer exakt.</p>
 
-<h3>Last.fm - Zweitquelle, braucht einen kostenlosen API-Key</h3>
+<h3>Last.fm (Musik) - Zweitquelle, braucht einen kostenlosen API-Key</h3>
 <ol>
 <li>API-Key anfordern unter <a href="https://www.last.fm/api/account/create">last.fm/api/account/create</a>.</li>
 <li>Den Key in <b>Einstellungen &rarr; Last.fm</b> eintragen.</li>
 </ol>
+
+<h3>iTunes (Hoerbuecher) - einzige Hoerbuch-Quelle, kein Key noetig</h3>
+<p>Apples oeffentliche iTunes-Suche kennt eine eigene Hoerbuch-Kategorie und
+liefert Titel, Autor (als "Interpret" gefuehrt) und Cover. Per Vorgabe
+aktiv. Die Abdeckung ist trotzdem nicht vollstaendig - nicht jedes Hoerbuch
+steht im iTunes Store, unsichere oder fehlende Treffer bleiben markiert und
+lassen sich per <i>Manuell zuordnen</i> nachtragen.</p>
+<p><b>Nicht eingebaut ist Audible</b>: Audible bietet keine oeffentliche API
+an, ein Zugriff liefe nur ueber Scraping der Webseite gegen deren
+Nutzungsbedingungen - das macht audiodesk bewusst nicht, auch nicht ueber
+importierte Skripte anderer Tools.</p>
 
 <h2>Musik-Ordner vs. Hoerbuch-Ordner</h2>
 <p>Beide Ordnerarten werden getrennt in den Einstellungen gepflegt. Eine

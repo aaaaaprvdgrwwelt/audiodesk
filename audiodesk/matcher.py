@@ -11,7 +11,9 @@ from PySide6.QtCore import QObject, QThread, Signal
 from deskkit.matching import title_similarity
 
 from .i18n import _
-from .library import LibraryIndex, STATUS_ERROR, STATUS_MATCHED, STATUS_UNSURE
+from .library import (
+    CHAPTER, LibraryIndex, STATUS_ERROR, STATUS_MATCHED, STATUS_UNSURE, TRACK,
+)
 from .providers.base import (
     Candidate, MetadataProvider, SearchQuery, TrackInfo, artist_similarity,
 )
@@ -40,6 +42,10 @@ def collect_candidates(query: SearchQuery, config: MatchConfig,
                        limit: int = 10) -> list[Candidate]:
     candidates: list[Candidate] = []
     for provider in config.providers:
+        if query.kind == TRACK and not provider.supports_track:
+            continue
+        if query.kind == CHAPTER and not provider.supports_chapter:
+            continue
         ok, _why = provider.available()
         if not ok:
             continue
@@ -95,7 +101,8 @@ class AutoMatchWorker(QObject):
             item = self.library.get(path)
             if item is None:
                 continue
-            query = SearchQuery(title=item.title, artist=item.artist, album=item.album)
+            query = SearchQuery(title=item.title, kind=item.kind,
+                               artist=item.artist, album=item.album)
             try:
                 info, score, note = identify(query, self.config)
             except Exception as exc:  # noqa: BLE001

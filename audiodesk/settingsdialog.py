@@ -107,6 +107,18 @@ class SettingsDialog(QDialog):
         form.addRow(self.use_lastfm)
         form.addRow(_("API-Key"), self.lastfm_key)
 
+        itunes_box = QGroupBox(_("iTunes (Hoerbuecher)"))
+        self.use_itunes_audiobooks = QCheckBox(_("Aktiv (kein API-Key noetig)"))
+        self.use_itunes_audiobooks.setChecked(settings.use_itunes_audiobooks)
+        form = QFormLayout(itunes_box)
+        form.addRow(self.use_itunes_audiobooks)
+        itunes_hint = QLabel(_(
+            "Einzige eingebaute Hoerbuch-Quelle - MusicBrainz/Discogs/"
+            "Last.fm sind reine Musikdatenbanken und werden fuer Hoerbuecher "
+            "nicht befragt."))
+        itunes_hint.setWordWrap(True)
+        form.addRow(itunes_hint)
+
         threshold_box = QGroupBox(_("Schwellwert fuer automatische Zuordnung"))
         self.threshold = QSlider(Qt.Horizontal)
         self.threshold.setRange(0, 100)
@@ -121,6 +133,7 @@ class SettingsDialog(QDialog):
         layout.addWidget(mb_box)
         layout.addWidget(discogs_box)
         layout.addWidget(lastfm_box)
+        layout.addWidget(itunes_box)
         layout.addWidget(threshold_box)
         layout.addStretch(1)
         return widget
@@ -162,6 +175,7 @@ class SettingsDialog(QDialog):
             use_discogs=self.use_discogs.isChecked(),
             lastfm_key=self.lastfm_key.text().strip(),
             use_lastfm=self.use_lastfm.isChecked(),
+            use_itunes_audiobooks=self.use_itunes_audiobooks.isChecked(),
             threshold=self.threshold.value(),
             track_template=self.track_template.text().strip(),
             chapter_template=self.chapter_template.text().strip(),

@@ -19,6 +19,7 @@ MIN_INTERVAL = 0.25
 class LastFmProvider(MetadataProvider):
     name = "lastfm"
     label = "Last.fm"
+    supports_track = True
 
     def __init__(self, api_key: str):
         self.api_key = (api_key or "").strip()

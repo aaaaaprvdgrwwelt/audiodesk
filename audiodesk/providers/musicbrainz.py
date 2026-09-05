@@ -26,6 +26,7 @@ MIN_INTERVAL = 1.0
 class MusicBrainzProvider(MetadataProvider):
     name = "musicbrainz"
     label = "MusicBrainz"
+    supports_track = True
 
     def __init__(self):
         self._session = requests.Session()

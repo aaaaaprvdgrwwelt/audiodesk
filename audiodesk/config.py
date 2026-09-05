@@ -11,6 +11,7 @@ from deskkit.settings import as_bool as _bool
 from .matcher import DEFAULT_THRESHOLD, MatchConfig
 from .providers.base import MetadataProvider
 from .providers.discogs import DiscogsProvider
+from .providers.itunes_audiobooks import ItunesAudiobooksProvider
 from .providers.lastfm import LastFmProvider
 from .providers.musicbrainz import MusicBrainzProvider
 
@@ -30,6 +31,9 @@ class Settings:
     use_discogs: bool = False
     lastfm_key: str = ""
     use_lastfm: bool = False
+    #: iTunes Search API - einzige eingebaute Hoerbuch-Quelle, kein Key
+    #: noetig, deshalb per Vorgabe an.
+    use_itunes_audiobooks: bool = True
     threshold: int = DEFAULT_THRESHOLD
     track_template: str = TRACK_TEMPLATE_DEFAULT
     chapter_template: str = CHAPTER_TEMPLATE_DEFAULT
@@ -47,6 +51,8 @@ class Settings:
             use_discogs=_bool(settings.value("use_discogs"), False),
             lastfm_key=settings.value("lastfm_key", "") or "",
             use_lastfm=_bool(settings.value("use_lastfm"), False),
+            use_itunes_audiobooks=_bool(
+                settings.value("use_itunes_audiobooks"), True),
             threshold=int(settings.value("threshold", DEFAULT_THRESHOLD)),
             track_template=settings.value(
                 "track_template", TRACK_TEMPLATE_DEFAULT) or TRACK_TEMPLATE_DEFAULT,
@@ -76,6 +82,8 @@ class Settings:
             providers.append(DiscogsProvider(self.discogs_token))
         if self.use_lastfm and self.lastfm_key.strip():
             providers.append(LastFmProvider(self.lastfm_key))
+        if self.use_itunes_audiobooks:
+            providers.append(ItunesAudiobooksProvider())
         return providers
 
     def build_config(self) -> MatchConfig:

@@ -20,6 +20,7 @@ MIN_INTERVAL = 1.1  # Discogs erlaubt 60 authentifizierte Anfragen/Minute.
 class DiscogsProvider(MetadataProvider):
     name = "discogs"
     label = "Discogs"
+    supports_track = True
 
     def __init__(self, token: str):
         self.token = (token or "").strip()

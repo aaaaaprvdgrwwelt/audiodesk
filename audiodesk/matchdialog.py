@@ -58,8 +58,8 @@ class MatchDialog(QDialog):
     def _search(self) -> None:
         self.results.clear()
         query = SearchQuery(
-            title=self.query_edit.text().strip(), artist=self.item.artist,
-            album=self.item.album)
+            title=self.query_edit.text().strip(), kind=self.item.kind,
+            artist=self.item.artist, album=self.item.album)
         self._candidates = collect_candidates(query, self.config)
         for candidate in self._candidates:
             year = f" ({candidate.year})" if candidate.year else ""

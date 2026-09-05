@@ -25,9 +25,15 @@ def artist_similarity(a: str, b: str) -> float:
 
 @dataclass
 class SearchQuery:
-    """Was wir aus den vorhandenen Tags bzw. dem Dateinamen wissen."""
+    """Was wir aus den vorhandenen Tags bzw. dem Dateinamen wissen.
+
+    `kind` (TRACK/CHAPTER aus library.py) entscheidet, welche Quellen ueber-
+    haupt gefragt werden - eine Musikdatenbank wie MusicBrainz taugt nicht
+    fuer Hoerbuecher und umgekehrt, siehe `MetadataProvider.supports_track`/
+    `supports_chapter`."""
 
     title: str
+    kind: str = ""
     artist: str = ""
     album: str = ""
 
@@ -67,6 +73,11 @@ class MetadataProvider:
     name = "base"
     label = "Basis"
     role = ROLE_PRIMARY
+    #: Welche Bibliotheks-Eintragstypen (TRACK/CHAPTER, siehe library.py)
+    #: diese Quelle sinnvoll beantworten kann - wie bei moviedesks
+    #: supports_movies/supports_series.
+    supports_track = False
+    supports_chapter = False
 
     def available(self) -> tuple[bool, str]:
         """(nutzbar, Begruendung falls nicht)."""

@@ -7,11 +7,14 @@ from pathlib import Path
 
 from PySide6.QtCore import QTimer, QUrl, Qt, Signal
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSlider, QWidget
+from PySide6.QtWidgets import (
+    QComboBox, QHBoxLayout, QLabel, QPushButton, QSlider, QWidget,
+)
 
 from .i18n import _
 from .icons import icon as tool_icon
 from .library import Item, LibraryIndex
+from .tags import read_chapters
 
 #: Wie oft der Fortschritt in der Bibliothek gesichert wird - bei einem
 #: Hoerbuch macht das den Fortschritt persistent, bei Musik ist es harmlos
@@ -38,6 +41,10 @@ class PlayerBar(QWidget):
         self.current_item: Item | None = None
         self.current_path: Path | None = None
         self._seeking = False
+        #: Kapitelmarken der aktuellen Datei (nur M4B mit eingebettetem
+        #: "chpl"-Atom, siehe tags.read_chapters) - sonst leer.
+        self.chapters: list = []
+        self._chapter_updating = False
 
         self._player = QMediaPlayer(self)
         self._output = QAudioOutput(self)
@@ -57,6 +64,13 @@ class PlayerBar(QWidget):
 
         self.title_label = QLabel(_("Keine Wiedergabe"))
         self.title_label.setMinimumWidth(180)
+
+        #: Nur sichtbar, wenn die aktuelle Datei eingebettete Kapitelmarken
+        #: hat (siehe tags.read_chapters) - sonst nimmt sie keinen Platz weg.
+        self.chapter_combo = QComboBox()
+        self.chapter_combo.setMinimumWidth(160)
+        self.chapter_combo.hide()
+        self.chapter_combo.activated.connect(self._on_chapter_chosen)
 
         self.position_label = QLabel("0:00")
         self.slider = QSlider(Qt.Horizontal)
@@ -78,6 +92,7 @@ class PlayerBar(QWidget):
         layout.setContentsMargins(8, 4, 8, 4)
         layout.addWidget(self.play_button)
         layout.addWidget(self.title_label)
+        layout.addWidget(self.chapter_combo)
         layout.addWidget(self.position_label)
         layout.addWidget(self.slider, 1)
         layout.addWidget(self.duration_label)
@@ -99,6 +114,32 @@ class PlayerBar(QWidget):
         self.title_label.setText(item.title or self.current_path.name)
         self.play_button.setEnabled(True)
         self._save_timer.start()
+        self._load_chapters()
+
+    def _load_chapters(self) -> None:
+        self.chapters = read_chapters(self.current_path) if self.current_path else []
+        self._chapter_updating = True
+        try:
+            self.chapter_combo.clear()
+            self.chapter_combo.addItems([c.title or _("Kapitel {n}").format(n=i + 1)
+                                         for i, c in enumerate(self.chapters)])
+        finally:
+            self._chapter_updating = False
+        self.chapter_combo.setVisible(bool(self.chapters))
+
+    def _on_chapter_chosen(self, index: int) -> None:
+        if self._chapter_updating or not (0 <= index < len(self.chapters)):
+            return
+        self._player.setPosition(self.chapters[index].start_ms)
+
+    def _current_chapter_index(self, position_ms: int) -> int | None:
+        index = None
+        for i, chapter in enumerate(self.chapters):
+            if chapter.start_ms <= position_ms:
+                index = i
+            else:
+                break
+        return index
 
     def toggle(self) -> None:
         if self._player.playbackState() == QMediaPlayer.PlayingState:
@@ -128,6 +169,12 @@ class PlayerBar(QWidget):
         if not self._seeking:
             self.slider.setValue(position)
         self.position_label.setText(format_ms(position))
+        if self.chapters:
+            index = self._current_chapter_index(position)
+            if index is not None and self.chapter_combo.currentIndex() != index:
+                self._chapter_updating = True
+                self.chapter_combo.setCurrentIndex(index)
+                self._chapter_updating = False
 
     def _on_media_status(self, status) -> None:
         if status == QMediaPlayer.EndOfMedia:

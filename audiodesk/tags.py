@@ -10,14 +10,26 @@ from pathlib import Path
 
 import mutagen
 from mutagen.flac import Picture
+from mutagen.mp4 import MP4
 
 AUDIO_EXTENSIONS = {".mp3", ".m4a", ".m4b", ".flac", ".ogg", ".oga", ".opus", ".wav"}
+
+#: M4B-Kapitelmarken stecken im "chpl"-Atom (Nero-Stil) - das einzige
+#: Format, ueber das mutagen Kapitel liest (kein Text-Track-basiertes
+#: QuickTime-Kapitelformat).
+_MP4_EXTENSIONS = {".m4a", ".m4b"}
 
 #: EasyID3/EasyMP4 & Co. liefern Listen von Strings je Schluessel.
 _EASY_KEYS = {
     "title": "title", "artist": "artist", "album": "album",
     "albumartist": "album_artist", "genre": "genre",
 }
+
+
+@dataclass
+class Chapter:
+    title: str
+    start_ms: int
 
 
 @dataclass
@@ -72,6 +84,23 @@ def read_tags(path: Path) -> TrackTags:
         album=values["album"], album_artist=values["album_artist"],
         track_number=track_number, year=year, genre=values["genre"],
         duration_ms=duration_ms)
+
+
+def read_chapters(path: Path) -> list[Chapter]:
+    """Eingebettete Kapitelmarken, falls vorhanden - nur M4B/M4A (siehe
+    _MP4_EXTENSIONS). Ohne "chpl"-Atom (die meisten M4B-Dateien ohne
+    Nero-Kapitel, sowie jedes andere Format) leere Liste, kein Fehler -
+    die Wiedergabe funktioniert dann einfach ohne Kapitelsprungmarken."""
+    if path.suffix.lower() not in _MP4_EXTENSIONS:
+        return []
+    try:
+        mp4 = MP4(str(path))
+    except Exception:  # noqa: BLE001
+        return []
+    if not mp4.chapters:
+        return []
+    return [Chapter(title=c.title or "", start_ms=round(c.start * 1000))
+            for c in mp4.chapters]
 
 
 def write_tags(path: Path, tags: TrackTags) -> None:

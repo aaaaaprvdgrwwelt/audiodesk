@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=AudioDesk
+Comment=Dateimanager fuer Musik und Hoerbuecher
+Exec=@PREFIX@/audiodesk.sh %f
+Icon=audiodesk
+StartupWMClass=audiodesk
+Terminal=false
+Categories=AudioVideo;Audio;FileTools;
+MimeType=audio/mpeg;audio/mp4;audio/x-flac;audio/ogg;

@@ -91,6 +91,22 @@ class SettingsDialog(QDialog):
         form = QFormLayout(mb_box)
         form.addRow(self.use_musicbrainz)
 
+        discogs_box = QGroupBox("Discogs")
+        self.use_discogs = QCheckBox(_("Aktiv"))
+        self.use_discogs.setChecked(settings.use_discogs)
+        self.discogs_token = QLineEdit(settings.discogs_token)
+        form = QFormLayout(discogs_box)
+        form.addRow(self.use_discogs)
+        form.addRow(_("Zugriffs-Token"), self.discogs_token)
+
+        lastfm_box = QGroupBox("Last.fm")
+        self.use_lastfm = QCheckBox(_("Aktiv"))
+        self.use_lastfm.setChecked(settings.use_lastfm)
+        self.lastfm_key = QLineEdit(settings.lastfm_key)
+        form = QFormLayout(lastfm_box)
+        form.addRow(self.use_lastfm)
+        form.addRow(_("API-Key"), self.lastfm_key)
+
         threshold_box = QGroupBox(_("Schwellwert fuer automatische Zuordnung"))
         self.threshold = QSlider(Qt.Horizontal)
         self.threshold.setRange(0, 100)
@@ -103,6 +119,8 @@ class SettingsDialog(QDialog):
         row.addWidget(self.threshold_label)
 
         layout.addWidget(mb_box)
+        layout.addWidget(discogs_box)
+        layout.addWidget(lastfm_box)
         layout.addWidget(threshold_box)
         layout.addStretch(1)
         return widget
@@ -140,6 +158,10 @@ class SettingsDialog(QDialog):
             music_roots=self.music_roots.roots(),
             audiobook_roots=self.audiobook_roots.roots(),
             use_musicbrainz=self.use_musicbrainz.isChecked(),
+            discogs_token=self.discogs_token.text().strip(),
+            use_discogs=self.use_discogs.isChecked(),
+            lastfm_key=self.lastfm_key.text().strip(),
+            use_lastfm=self.use_lastfm.isChecked(),
             threshold=self.threshold.value(),
             track_template=self.track_template.text().strip(),
             chapter_template=self.chapter_template.text().strip(),

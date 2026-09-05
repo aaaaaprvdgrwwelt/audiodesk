@@ -22,11 +22,33 @@ HELP_HTML = """
     unteren Fensterrand. Bei Hoerbuechern wird die Position gemerkt.</li>
 </ol>
 
-<h2>Was MusicBrainz liefert - und wo es an Grenzen stoesst</h2>
-<p>Fuer Musik: Titel, Interpret, Album und ein Cover (ueber das Cover Art
-Archive), gesucht ueber Titel und Interpret. Fuer Hoerbuecher ist die
-Abdeckung bei MusicBrainz deutlich luecklicher, da es in erster Linie eine
-Musikdatenbank ist - ein Treffer ist dort keine Garantie.</p>
+<h2>Welche Quelle wofuer?</h2>
+<p>Alle drei Quellen sind optional und lassen sich einzeln unter
+<b>Einstellungen &rarr; Quellen</b> ein- und ausschalten. Fuer Hoerbuecher
+ist die Abdeckung bei allen dreien deutlich luecklicher als bei Musik, da
+es in erster Linie Musikdatenbanken sind - ein Treffer ist dort keine
+Garantie.</p>
+
+<h3>MusicBrainz - empfohlen, kein Key noetig</h3>
+<p>Titel, Interpret, Album und ein Cover (ueber das Cover Art Archive),
+gesucht ueber Titel und Interpret.</p>
+
+<h3>Discogs - Zweitquelle, braucht einen kostenlosen Zugriffs-Token</h3>
+<ol>
+<li>Konto auf <a href="https://www.discogs.com">discogs.com</a> anlegen.</li>
+<li>Unter <a href="https://www.discogs.com/settings/developers">discogs.com/settings/developers</a>
+    einen <b>persoenlichen Zugriffs-Token</b> erzeugen (kein OAuth noetig).</li>
+<li>Den Token in <b>Einstellungen &rarr; Discogs</b> eintragen.</li>
+</ol>
+<p>Discogs fuehrt Interpret und Titel in einem einzigen Feld
+("Interpret - Titel") - die Trennung ist deshalb ein Ratewert und nicht
+immer exakt.</p>
+
+<h3>Last.fm - Zweitquelle, braucht einen kostenlosen API-Key</h3>
+<ol>
+<li>API-Key anfordern unter <a href="https://www.last.fm/api/account/create">last.fm/api/account/create</a>.</li>
+<li>Den Key in <b>Einstellungen &rarr; Last.fm</b> eintragen.</li>
+</ol>
 
 <h2>Musik-Ordner vs. Hoerbuch-Ordner</h2>
 <p>Beide Ordnerarten werden getrennt in den Einstellungen gepflegt. Eine

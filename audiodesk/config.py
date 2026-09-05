@@ -10,6 +10,8 @@ from deskkit.settings import as_bool as _bool
 
 from .matcher import DEFAULT_THRESHOLD, MatchConfig
 from .providers.base import MetadataProvider
+from .providers.discogs import DiscogsProvider
+from .providers.lastfm import LastFmProvider
 from .providers.musicbrainz import MusicBrainzProvider
 
 TRACK_TEMPLATE_DEFAULT = "{artist}/{album}/{track_number:02} - {title}{ext}"
@@ -24,6 +26,10 @@ class Settings:
     music_roots: list[str] = field(default_factory=list)
     audiobook_roots: list[str] = field(default_factory=list)
     use_musicbrainz: bool = True
+    discogs_token: str = ""
+    use_discogs: bool = False
+    lastfm_key: str = ""
+    use_lastfm: bool = False
     threshold: int = DEFAULT_THRESHOLD
     track_template: str = TRACK_TEMPLATE_DEFAULT
     chapter_template: str = CHAPTER_TEMPLATE_DEFAULT
@@ -37,6 +43,10 @@ class Settings:
             audiobook_roots=json.loads(
                 settings.value("audiobook_roots", "[]") or "[]"),
             use_musicbrainz=_bool(settings.value("use_musicbrainz"), True),
+            discogs_token=settings.value("discogs_token", "") or "",
+            use_discogs=_bool(settings.value("use_discogs"), False),
+            lastfm_key=settings.value("lastfm_key", "") or "",
+            use_lastfm=_bool(settings.value("use_lastfm"), False),
             threshold=int(settings.value("threshold", DEFAULT_THRESHOLD)),
             track_template=settings.value(
                 "track_template", TRACK_TEMPLATE_DEFAULT) or TRACK_TEMPLATE_DEFAULT,
@@ -62,6 +72,10 @@ class Settings:
         providers: list[MetadataProvider] = []
         if self.use_musicbrainz:
             providers.append(MusicBrainzProvider())
+        if self.use_discogs and self.discogs_token.strip():
+            providers.append(DiscogsProvider(self.discogs_token))
+        if self.use_lastfm and self.lastfm_key.strip():
+            providers.append(LastFmProvider(self.lastfm_key))
         return providers
 
     def build_config(self) -> MatchConfig:

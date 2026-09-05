@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, QSize, Qt
+from PySide6.QtCore import QSettings, QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QFileDialog, QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem,
@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 from send2trash import send2trash
 
 from deskkit.actions import ActionRegistry
+from deskkit.paths import subfolder_of
 from deskkit.tiles import STATUS_ROLE, SUBTITLE_ROLE, CoverDelegate, configure_grid
 
 from . import matcher, renamer, scanner
@@ -274,6 +275,36 @@ class MainWindow(QMainWindow):
         thread.start()
         progress.exec()
         thread.wait(5000)
+
+    def _scan_target(self, folder: Path, root: Path, kind: str) -> None:
+        """Nur `folder` neu einlesen - fuer den gezielten Scan eines
+        einzelnen Albums oder Hoerbuchs aus dem Kontextmenue, statt jedes
+        Mal den ganzen Wurzelordner zu durchsuchen."""
+        progress = QProgressDialog(_("Scanne …"), None, 0, 0, self)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimumDuration(0)
+        progress.setCancelButton(None)
+        progress.setAutoClose(False)
+        progress.setAutoReset(False)
+
+        thread, worker = scanner.run_folder_in_thread(folder, root, kind, self.library)
+        worker.progress.connect(progress.setLabelText)
+        thread.finished.connect(progress.close)
+        thread.finished.connect(self.refresh_view)
+        thread.finished.connect(
+            lambda: self.statusBar().showMessage(_("Scan abgeschlossen."), 4000))
+        self._scan_thread, self._scan_worker = thread, worker
+        thread.start()
+        progress.exec()
+        thread.wait(5000)
+
+    def _scan_track(self, track: Item) -> None:
+        root = Path(track.root)
+        self._scan_target(subfolder_of(Path(track.path), root), root, TRACK)
+
+    def _scan_chapter(self, chapter: Item) -> None:
+        root = Path(chapter.root)
+        self._scan_target(subfolder_of(Path(chapter.path), root), root, CHAPTER)
 
     # --- Ansicht befuellen --------------------------------------------
     def refresh_view(self) -> None:
@@ -620,6 +651,12 @@ class MainWindow(QMainWindow):
         if len(items) == 1:
             menu.addAction(_("Manuell zuordnen …"),
                            lambda: self._manual_match(items[0]))
+            menu.addAction(
+                tool_icon("refresh"), _("Nur dieses Album scannen"),
+                # Erst starten, wenn das Kontextmenue sich geschlossen hat -
+                # ein QThread + modaler Dialog waehrend dessen eigener
+                # Event-Schleife (Popup-Grab) kann sonst abstuerzen.
+                lambda: QTimer.singleShot(0, lambda: self._scan_track(items[0])))
         menu.addSeparator()
         menu.addAction(self.actions_map["rename"])
         menu.addAction(self.actions_map["save_metadata"])
@@ -638,6 +675,12 @@ class MainWindow(QMainWindow):
         if len(items) == 1:
             menu.addAction(_("Manuell zuordnen …"),
                            lambda: self._manual_match(items[0]))
+            menu.addAction(
+                tool_icon("refresh"), _("Nur dieses Hoerbuch scannen"),
+                # Erst starten, wenn das Kontextmenue sich geschlossen hat -
+                # ein QThread + modaler Dialog waehrend dessen eigener
+                # Event-Schleife (Popup-Grab) kann sonst abstuerzen.
+                lambda: QTimer.singleShot(0, lambda: self._scan_chapter(items[0])))
         menu.addSeparator()
         menu.addAction(self.actions_map["rename"])
         menu.addAction(self.actions_map["save_metadata"])

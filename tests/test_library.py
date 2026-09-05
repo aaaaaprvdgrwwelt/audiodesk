@@ -95,6 +95,17 @@ def test_audiobook_groups_prefers_book_title_of_matched_item(tmp_path):
     assert groups[0][0] == "Dune"
 
 
+def test_forget_missing_under_only_touches_given_folder(tmp_path):
+    index = make_index(tmp_path)
+    root = Path("/music")
+    index.mark_scanned(root / "ArtistA" / "1.mp3", TRACK, root, title="A1")
+    index.mark_scanned(root / "ArtistB" / "1.mp3", TRACK, root, title="B1")
+    removed = index.forget_missing_under(root / "ArtistA", set())
+    assert removed == 1
+    remaining_titles = {t.title for t in index.list_tracks()}
+    assert remaining_titles == {"B1"}
+
+
 def test_remove_under_deletes_only_matching_prefix(tmp_path):
     index = make_index(tmp_path)
     root = Path("/music")

@@ -46,6 +46,7 @@ DE = {
     "Hoerbuecher": "Hörbücher",
     "Hoerbuch-Ordner": "Hörbuch-Ordner",
     "Hoerbuch-Ordner …": "Hörbuch-Ordner …",
+    "Nur dieses Hoerbuch scannen": "Nur dieses Hörbuch scannen",
     "Platzhalter Hoerbuecher: {book_title} {chapter} {title} {ext}":
         "Platzhalter Hörbücher: {book_title} {chapter} {title} {ext}",
     "{n} Aenderung(en) geplant, {u} bereits korrekt benannt.":

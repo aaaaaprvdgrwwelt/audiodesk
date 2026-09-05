@@ -81,3 +81,56 @@ def run_in_thread(music_roots: list[str], audiobook_roots: list[str],
     thread.started.connect(worker.run)
     worker.finished.connect(thread.quit)
     return thread, worker
+
+
+def scan_folder(folder: Path, root: Path, kind: str, library: LibraryIndex) -> None:
+    """Nur `folder` neu einlesen - z. B. der Ordner eines einzelnen Albums
+    oder Hoerbuchs, statt des ganzen Wurzelordners `root`. Eintraege werden
+    weiterhin unter `root` gefuehrt (wie beim vollen Scan), aber nur
+    unterhalb von `folder` verglichen/aufgeraeumt."""
+    found = find_audio(folder)
+    for path in found:
+        tags = read_tags(path)
+        if kind == TRACK:
+            library.mark_scanned(
+                path, TRACK, root, tags.title, tags.artist,
+                tags.album, tags.album_artist, tags.track_number,
+                tags.year, tags.genre, tags.duration_ms)
+        else:
+            book_title = tags.album or path.parent.name
+            library.mark_scanned(
+                path, CHAPTER, root, tags.title, tags.artist,
+                tags.album, tags.album_artist, tags.track_number,
+                tags.year, tags.genre, tags.duration_ms, book_title)
+    library.forget_missing_under(folder, {str(p) for p in found})
+
+
+class FolderScanWorker(QObject):
+    """Wie `ScanWorker`, aber fuer einen einzelnen Unterordner statt aller
+    konfigurierten Wurzelordner - fuer den gezielten Scan aus dem
+    Kontextmenue eines einzelnen Albums oder Hoerbuchs."""
+
+    progress = Signal(str)
+    finished = Signal()
+
+    def __init__(self, folder: Path, root: Path, kind: str, library: LibraryIndex):
+        super().__init__()
+        self.folder = folder
+        self.root = root
+        self.kind = kind
+        self.library = library
+
+    def run(self) -> None:
+        self.progress.emit(str(self.folder))
+        scan_folder(self.folder, self.root, self.kind, self.library)
+        self.finished.emit()
+
+
+def run_folder_in_thread(folder: Path, root: Path, kind: str, library: LibraryIndex):
+    """Gibt (thread, worker) zurueck - der Aufrufer verbindet die Signale."""
+    thread = QThread()
+    worker = FolderScanWorker(folder, root, kind, library)
+    worker.moveToThread(thread)
+    thread.started.connect(worker.run)
+    worker.finished.connect(thread.quit)
+    return thread, worker

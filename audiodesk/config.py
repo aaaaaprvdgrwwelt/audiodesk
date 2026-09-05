@@ -8,9 +8,12 @@ from PySide6.QtCore import QSettings
 
 from deskkit.settings import as_bool as _bool
 
+from .matcher import DEFAULT_THRESHOLD, MatchConfig
+from .providers.base import MetadataProvider
+from .providers.musicbrainz import MusicBrainzProvider
+
 TRACK_TEMPLATE_DEFAULT = "{artist}/{album}/{track_number:02} - {title}{ext}"
 CHAPTER_TEMPLATE_DEFAULT = "{book_title}/{chapter:03} - {title}{ext}"
-DEFAULT_THRESHOLD = 70
 
 
 @dataclass
@@ -53,3 +56,13 @@ class Settings:
             settings.setValue(key, value)
         settings.endGroup()
         settings.sync()
+
+    # ------------------------------------------------------------------
+    def build_providers(self) -> list[MetadataProvider]:
+        providers: list[MetadataProvider] = []
+        if self.use_musicbrainz:
+            providers.append(MusicBrainzProvider())
+        return providers
+
+    def build_config(self) -> MatchConfig:
+        return MatchConfig(threshold=self.threshold, providers=self.build_providers())

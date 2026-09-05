@@ -15,13 +15,14 @@ from send2trash import send2trash
 
 from deskkit.actions import ActionRegistry
 
-from . import renamer, scanner
+from . import matcher, renamer, scanner
 from .appicon import icon as app_icon
 from .config import Settings
 from .helpdialog import HelpDialog
 from .i18n import _, set_language
 from .icons import icon as tool_icon
 from .library import CHAPTER, Item, LibraryIndex, TRACK
+from .matchdialog import MatchDialog
 from .metapanel import MetaPanel
 from .player import PlayerBar
 from .renamedialog import RenameDialog
@@ -262,6 +263,8 @@ class MainWindow(QMainWindow):
         a.add("add_audiobook_root", "Hoerbuch-Ordner …",
              slot=self._add_audiobook_root)
         a.add("scan", "Scannen", "F5", self.scan_all, tool_icon("refresh"))
+        a.add("auto_match", "Automatisch zuordnen", "Ctrl+T", self.auto_match,
+             tool_icon("match"))
         a.add("play", "Abspielen", "Space", self.play_selected, tool_icon("play"),
              target=self.tabs, shortcut_context=Qt.WidgetWithChildrenShortcut)
         a.add("rename", "Umbenennen …", "Ctrl+R", self.rename_preview,
@@ -294,6 +297,7 @@ class MainWindow(QMainWindow):
             button.setPopupMode(QToolButton.InstantPopup)
 
         bar.addAction(a["scan"])
+        bar.addAction(a["auto_match"])
         bar.addSeparator()
         bar.addAction(a["play"])
         bar.addAction(a["rename"])
@@ -332,6 +336,9 @@ class MainWindow(QMainWindow):
 
         menu = bar.addMenu(_("&Ansicht"))
         menu.addAction(a["search"])
+
+        menu = bar.addMenu(_("E&xtras"))
+        menu.addAction(a["auto_match"])
         menu.addSeparator()
         menu.addAction(a["settings"])
 
@@ -545,6 +552,48 @@ class MainWindow(QMainWindow):
                 list_item.setIcon(QIcon(pixmap))
 
     # --- Wiedergabe ------------------------------------------------------
+    # --- Automatisches Zuordnen ------------------------------------------
+    def auto_match(self) -> None:
+        config = self.settings.build_config()
+        if not config.providers:
+            QMessageBox.warning(
+                self, _("Automatisch zuordnen"),
+                _("Keine Quelle aktiviert.") + " " + _("Einstellungen …"))
+            return
+        selected = self._selected_items()
+        if selected:
+            paths = [Path(i.path) for i in selected]
+        else:
+            paths = [Path(i.path) for i in self.library.unresolved()]
+        if not paths:
+            QMessageBox.information(
+                self, _("Automatisch zuordnen"),
+                _("Nichts zu tun - alles bereits zugeordnet."))
+            return
+
+        progress = QProgressDialog(
+            _("Ordne zu …"), _("Abbrechen"), 0, len(paths), self)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setAutoClose(False)
+        progress.setAutoReset(False)
+
+        thread, worker = matcher.run_in_thread(paths, config, self.library)
+        worker.progress.connect(lambda i, n, name: (
+            progress.setMaximum(n), progress.setValue(i), progress.setLabelText(name)))
+        progress.canceled.connect(worker.stop)
+        thread.finished.connect(progress.close)
+        thread.finished.connect(self.refresh_view)
+        self._match_thread, self._match_worker = thread, worker
+        thread.start()
+        progress.exec()
+        thread.wait(5000)
+
+    def _manual_match(self, item: Item) -> None:
+        config = self.settings.build_config()
+        dialog = MatchDialog(item, config, self.library, self.loader, self)
+        if dialog.exec():
+            self.refresh_view()
+
     def play_selected(self) -> None:
         item = self._current_track() or self._current_chapter()
         if item is None:
@@ -683,6 +732,11 @@ class MainWindow(QMainWindow):
         menu = QMenu(self)
         menu.addAction(self.actions_map["play"])
         menu.addSeparator()
+        menu.addAction(self.actions_map["auto_match"])
+        if len(items) == 1:
+            menu.addAction(_("Manuell zuordnen …"),
+                           lambda: self._manual_match(items[0]))
+        menu.addSeparator()
         menu.addAction(self.actions_map["rename"])
         menu.addAction(self.actions_map["save_metadata"])
         menu.addSeparator()
@@ -695,6 +749,11 @@ class MainWindow(QMainWindow):
             return
         menu = QMenu(self)
         menu.addAction(self.actions_map["play"])
+        menu.addSeparator()
+        menu.addAction(self.actions_map["auto_match"])
+        if len(items) == 1:
+            menu.addAction(_("Manuell zuordnen …"),
+                           lambda: self._manual_match(items[0]))
         menu.addSeparator()
         menu.addAction(self.actions_map["rename"])
         menu.addAction(self.actions_map["save_metadata"])
@@ -717,7 +776,7 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
     def closeEvent(self, event) -> None:  # noqa: N802
         self.player.stop()
-        for attr in ("_scan_thread",):
+        for attr in ("_scan_thread", "_match_thread"):
             thread = getattr(self, attr, None)
             if thread is not None and thread.isRunning():
                 thread.wait(2000)

@@ -61,6 +61,9 @@ DE = {
         "Einzige eingebaute Hörbuch-Quelle - MusicBrainz/Discogs/"
         "Last.fm sind reine Musikdatenbanken und werden für Hörbücher "
         "nicht befragt.",
+    "Zur Warteschlange hinzufuegen": "Zur Warteschlange hinzufügen",
+    "Als naechstes abspielen": "Als nächstes abspielen",
+    "Aus Warteschlange entfernen": "Aus Warteschlange entfernen",
 }
 EN: dict[str, str] = {}
 

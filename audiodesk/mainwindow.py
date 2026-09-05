@@ -134,6 +134,14 @@ class MainWindow(QMainWindow):
         book_split.setStretchFactor(2, 2)
         self.tabs.addTab(book_split, tool_icon("book"), _("Hoerbuecher"))
 
+        # --- Warteschlange ------------------------------------------------
+        self.queue_list = QListWidget()
+        self.queue_list.setDragDropMode(QListWidget.InternalMove)
+        self.queue_list.itemDoubleClicked.connect(self._play_from_queue)
+        self.queue_list.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.queue_list.customContextMenuRequested.connect(self._queue_context_menu)
+        self.tabs.addTab(self.queue_list, tool_icon("queue"), _("Warteschlange"))
+
         central = QWidget()
         layout = QVBoxLayout(central)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -525,11 +533,21 @@ class MainWindow(QMainWindow):
         self.player.play(item)
 
     def _play_next(self) -> None:
-        """Naechsten Titel/Kapitel im selben Album/Hoerbuch anspielen, falls
-        eines bekannt ist - keine eigene Warteschlange fuer v1."""
+        """Was als naechstes laeuft: zuerst die von Hand zusammengestellte
+        Warteschlange (falls nicht leer), sonst Wiederholen/Zufall/die
+        uebliche Geschwister-Reihenfolge im selben Album/Hoerbuch."""
+        if self.queue_list.count() > 0:
+            item = self.queue_list.takeItem(0).data(Qt.UserRole)
+            self._play_item(item)
+            return
+
         current = self.player.current_item
         if current is None:
             return
+        if self.player.repeat_mode == "one":
+            self._play_item(current)
+            return
+
         if current.kind == TRACK:
             siblings = self.library.list_tracks(current.album)
         else:
@@ -541,8 +559,46 @@ class MainWindow(QMainWindow):
             index = paths.index(Path(current.path))
         except ValueError:
             return
-        if index + 1 < len(siblings):
+
+        if self.player.shuffle:
+            if len(siblings) <= 1:
+                return
+            import random
+            next_index = random.choice(
+                [i for i in range(len(siblings)) if i != index])
+            self._play_item(siblings[next_index])
+        elif index + 1 < len(siblings):
             self._play_item(siblings[index + 1])
+        elif self.player.repeat_mode == "all" and siblings:
+            self._play_item(siblings[0])
+
+    # --- Warteschlange -----------------------------------------------------
+    def _queue_add(self, items: list[Item], *, next_up: bool = False) -> None:
+        for offset, item in enumerate(items):
+            list_item = QListWidgetItem(item.title or Path(item.path).name)
+            list_item.setData(Qt.UserRole, item)
+            self.queue_list.insertItem(offset if next_up else self.queue_list.count(),
+                                       list_item)
+
+    def _play_from_queue(self, list_item: QListWidgetItem) -> None:
+        self.queue_list.takeItem(self.queue_list.row(list_item))
+        self._play_item(list_item.data(Qt.UserRole))
+
+    def _queue_context_menu(self, pos) -> None:
+        items = self.queue_list.selectedItems()
+        menu = QMenu(self)
+        if items:
+            menu.addAction(_("Abspielen"),
+                           lambda: self._play_from_queue(items[0]))
+            menu.addAction(
+                _("Aus Warteschlange entfernen"),
+                lambda: [self.queue_list.takeItem(self.queue_list.row(i))
+                        for i in items])
+            menu.addSeparator()
+        if self.queue_list.count() > 0:
+            menu.addAction(_("Warteschlange leeren"), self.queue_list.clear)
+        if not menu.isEmpty():
+            menu.exec(self.queue_list.viewport().mapToGlobal(pos))
 
     # --- Umbenennen ------------------------------------------------------
     # --- Metadaten in die Datei zurueckschreiben --------------------------
@@ -646,6 +702,10 @@ class MainWindow(QMainWindow):
             return
         menu = QMenu(self)
         menu.addAction(self.actions_map["play"])
+        menu.addAction(tool_icon("queue"), _("Zur Warteschlange hinzufuegen"),
+                       lambda: self._queue_add(items))
+        menu.addAction(_("Als naechstes abspielen"),
+                       lambda: self._queue_add(items, next_up=True))
         menu.addSeparator()
         menu.addAction(self.actions_map["auto_match"])
         if len(items) == 1:
@@ -670,6 +730,10 @@ class MainWindow(QMainWindow):
             return
         menu = QMenu(self)
         menu.addAction(self.actions_map["play"])
+        menu.addAction(tool_icon("queue"), _("Zur Warteschlange hinzufuegen"),
+                       lambda: self._queue_add(items))
+        menu.addAction(_("Als naechstes abspielen"),
+                       lambda: self._queue_add(items, next_up=True))
         menu.addSeparator()
         menu.addAction(self.actions_map["auto_match"])
         if len(items) == 1:

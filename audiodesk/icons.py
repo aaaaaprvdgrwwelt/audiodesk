@@ -40,6 +40,12 @@ PATHS = {
     "prev": '<path d="M18 6v12L8 12z"/><path d="M6 6v12"/>',
     "next": '<path d="M6 6v12l10-6z"/><path d="M18 6v12"/>',
     "volume": '<path d="M4 10v4h4l5 4V6l-5 4z"/><path d="M16.5 9.5a4 4 0 0 1 0 5"/>',
+    "shuffle": '<path d="M4 6h3.5l9 12H20"/><path d="M4 18h3.5l2.3-3.1"/>'
+               '<path d="M13.2 8.5L15.5 6H20"/>'
+               '<path d="M17.5 3.5L20.5 6l-3 2.5"/><path d="M17.5 20.5l3-2.5-3-2.5"/>',
+    "repeat": '<path d="M6 8h11a2 2 0 0 1 2 2v2"/><path d="M17.5 5.5L20 8l-2.5 2.5"/>'
+              '<path d="M18 16H7a2 2 0 0 1-2-2v-2"/><path d="M6.5 18.5L4 16l2.5-2.5"/>',
+    "queue": '<path d="M4 6h16M4 12h10M4 18h10"/><path d="M17 15v6M14 18h6"/>',
 }
 
 icon = IconSet(PATHS).icon

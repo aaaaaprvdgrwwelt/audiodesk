@@ -21,6 +21,14 @@ from .tags import read_chapters
 #: ungenutzt.
 SAVE_INTERVAL_MS = 2000
 
+#: Reihenfolge, in der der Wiederholen-Knopf durchschaltet.
+REPEAT_MODES = ("off", "all", "one")
+REPEAT_LABELS = {
+    "off": _("Wiederholen: aus"),
+    "all": _("Wiederholen: alle"),
+    "one": _("Wiederholen: aktueller Titel"),
+}
+
 
 def format_ms(ms: int) -> str:
     seconds = max(ms, 0) // 1000
@@ -45,6 +53,11 @@ class PlayerBar(QWidget):
         #: "chpl"-Atom, siehe tags.read_chapters) - sonst leer.
         self.chapters: list = []
         self._chapter_updating = False
+        #: Von mainwindow._play_next() ausgewertet - die eigentliche
+        #: "was kommt als naechstes"-Logik (Album/Hoerbuch-Geschwister,
+        #: Warteschlange) liegt dort, hier nur der Ein/Aus-Zustand.
+        self.shuffle = False
+        self.repeat_mode = "off"
 
         self._player = QMediaPlayer(self)
         self._output = QAudioOutput(self)
@@ -79,6 +92,18 @@ class PlayerBar(QWidget):
         self.slider.sliderReleased.connect(self._seek_commit)
         self.duration_label = QLabel("0:00")
 
+        self.shuffle_button = QPushButton()
+        self.shuffle_button.setIcon(tool_icon("shuffle"))
+        self.shuffle_button.setCheckable(True)
+        self.shuffle_button.setToolTip(_("Zufallswiedergabe"))
+        self.shuffle_button.toggled.connect(self._set_shuffle)
+
+        self.repeat_button = QPushButton()
+        self.repeat_button.setIcon(tool_icon("repeat"))
+        self.repeat_button.setCheckable(True)
+        self.repeat_button.setToolTip(REPEAT_LABELS["off"])
+        self.repeat_button.clicked.connect(self._cycle_repeat)
+
         volume_label = QLabel()
         volume_label.setPixmap(tool_icon("volume").pixmap(16, 16))
         self.volume_slider = QSlider(Qt.Horizontal)
@@ -96,6 +121,8 @@ class PlayerBar(QWidget):
         layout.addWidget(self.position_label)
         layout.addWidget(self.slider, 1)
         layout.addWidget(self.duration_label)
+        layout.addWidget(self.shuffle_button)
+        layout.addWidget(self.repeat_button)
         layout.addWidget(volume_label)
         layout.addWidget(self.volume_slider)
 
@@ -196,6 +223,15 @@ class PlayerBar(QWidget):
     def _seek_commit(self) -> None:
         self._player.setPosition(self.slider.value())
         self._seeking = False
+
+    def _set_shuffle(self, on: bool) -> None:
+        self.shuffle = on
+
+    def _cycle_repeat(self) -> None:
+        index = (REPEAT_MODES.index(self.repeat_mode) + 1) % len(REPEAT_MODES)
+        self.repeat_mode = REPEAT_MODES[index]
+        self.repeat_button.setChecked(self.repeat_mode != "off")
+        self.repeat_button.setToolTip(REPEAT_LABELS[self.repeat_mode])
 
     def _save_position(self) -> None:
         if self.current_path is not None:

@@ -1,0 +1,5 @@
+-e ../deskkit
+PySide6
+mutagen
+requests
+send2trash

@@ -28,10 +28,14 @@ jobs:
 
       # PySide6 laesst sich importieren, braucht aber ein paar
       # System-Bibliotheken, die auf dem Runner nicht vorinstalliert sind.
+      # libpulse0 zusaetzlich fuer QtMultimedia (PlayerBar) - ohne die
+      # scheitert schon der Modulimport mit "libpulse.so.0: cannot open
+      # shared object file".
       - name: Qt-Laufzeitbibliotheken
         run: |
           sudo apt-get update
-          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libxcb-cursor0
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libxcb-cursor0 \
+            libpulse0
 
       - name: Abhaengigkeiten
         working-directory: app

@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from PySide6.QtCore import QSettings
 
+from deskkit.secrets import get_secret, set_secret
 from deskkit.settings import as_bool as _bool
 
 from .matcher import DEFAULT_THRESHOLD, MatchConfig
@@ -47,9 +48,9 @@ class Settings:
             audiobook_roots=json.loads(
                 settings.value("audiobook_roots", "[]") or "[]"),
             use_musicbrainz=_bool(settings.value("use_musicbrainz"), True),
-            discogs_token=settings.value("discogs_token", "") or "",
+            discogs_token=get_secret(settings, "audiodesk", "discogs_token"),
             use_discogs=_bool(settings.value("use_discogs"), False),
-            lastfm_key=settings.value("lastfm_key", "") or "",
+            lastfm_key=get_secret(settings, "audiodesk", "lastfm_key"),
             use_lastfm=_bool(settings.value("use_lastfm"), False),
             use_itunes_audiobooks=_bool(
                 settings.value("use_itunes_audiobooks"), True),
@@ -64,9 +65,16 @@ class Settings:
         settings.endGroup()
         return obj
 
+    #: Landen im System-Schluesselbund statt im Klartext in QSettings
+    #: (siehe deskkit.secrets).
+    _SECRET_FIELDS = ("discogs_token", "lastfm_key")
+
     def save(self, settings: QSettings) -> None:
         settings.beginGroup("audiodesk")
         for key, value in self.__dict__.items():
+            if key in self._SECRET_FIELDS:
+                set_secret(settings, "audiodesk", key, value)
+                continue
             if isinstance(value, list):
                 value = json.dumps(value)
             settings.setValue(key, value)

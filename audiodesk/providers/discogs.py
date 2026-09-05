@@ -78,7 +78,27 @@ class DiscogsProvider(MetadataProvider):
         return results
 
     def details(self, candidate: Candidate) -> TrackInfo:
+        """Die Suche liefert Interpret/Titel nur grob am ersten " - "
+        aufgetrennt (siehe search()) - fehlerhaft bei Interpreten, deren
+        Name selbst einen Bindestrich enthaelt (z. B. "Emerson, Lake &
+        Palmer"). Der Release-Detailaufruf hat beides sauber getrennt in
+        eigenen Feldern, deshalb hier bevorzugt - nur bei Fehlschlag (Netz,
+        geloeschter Release) faellt es auf die Heuristik der Suche zurueck."""
+        try:
+            data = self._get(f"/releases/{candidate.external_id}", {})
+        except Exception:  # noqa: BLE001
+            return TrackInfo(
+                title=candidate.title, artist=candidate.artist,
+                year=candidate.year, cover_url=candidate.cover_url,
+                source=self.name, external_id=candidate.external_id)
+
+        title = data.get("title") or candidate.title
+        artists = [a.get("name", "") for a in data.get("artists", []) if a.get("name")]
+        artist = ", ".join(artists) if artists else candidate.artist
+        year = data.get("year") or candidate.year
+        images = data.get("images") or []
+        cover_url = images[0].get("resource_url") if images else candidate.cover_url
+
         return TrackInfo(
-            title=candidate.title, artist=candidate.artist,
-            year=candidate.year, cover_url=candidate.cover_url,
+            title=title, artist=artist, year=year, cover_url=cover_url,
             source=self.name, external_id=candidate.external_id)

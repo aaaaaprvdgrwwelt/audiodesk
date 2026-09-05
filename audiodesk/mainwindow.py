@@ -66,6 +66,8 @@ class MainWindow(QMainWindow):
         self.loader.ready.connect(self._on_cover)
         self.player = PlayerBar(self.library, self)
         self.player.finished.connect(self._play_next)
+        self.player.volume_slider.setValue(self.settings.volume)
+        self.player.volume_slider.valueChanged.connect(self._on_volume_changed)
 
         self._search_text = ""
         self._build_central()
@@ -516,6 +518,15 @@ class MainWindow(QMainWindow):
         dialog = MatchDialog(item, config, self.library, self.loader, self)
         if dialog.exec():
             self.refresh_view()
+
+    def _on_volume_changed(self, value: int) -> None:
+        # Nur der eine Wert, nicht der volle Settings.save()-Umweg - sonst
+        # wuerde jeder Regler-Tick beim Ziehen die komplette Konfiguration
+        # (Vorlagen, Quellen, ...) unnoetig oft neu schreiben.
+        self.settings.volume = value
+        self.qsettings.beginGroup("audiodesk")
+        self.qsettings.setValue("volume", value)
+        self.qsettings.endGroup()
 
     def play_selected(self) -> None:
         item = self._current_track() or self._current_chapter()

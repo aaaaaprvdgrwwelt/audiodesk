@@ -39,6 +39,9 @@ class Settings:
     track_template: str = TRACK_TEMPLATE_DEFAULT
     chapter_template: str = CHAPTER_TEMPLATE_DEFAULT
     language: str = "auto"
+    #: Lautstaerke der Wiedergabeleiste (0-100) - bleibt sonst bei jedem
+    #: Neustart auf dem QAudioOutput-Vorgabewert stehen.
+    volume: int = 80
 
     @classmethod
     def load(cls, settings: QSettings) -> "Settings":
@@ -61,6 +64,7 @@ class Settings:
                 "chapter_template", CHAPTER_TEMPLATE_DEFAULT)
             or CHAPTER_TEMPLATE_DEFAULT,
             language=settings.value("language", "auto") or "auto",
+            volume=int(settings.value("volume", 80)),
         )
         settings.endGroup()
         return obj

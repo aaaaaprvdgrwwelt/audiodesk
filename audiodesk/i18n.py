@@ -43,6 +43,15 @@ DE = {
     "Schwellwert fuer automatische Zuordnung":
         "Schwellwert für automatische Zuordnung",
     "Aktiv (kein API-Key noetig)": "Aktiv (kein API-Key nötig)",
+    "Hoerbuecher": "Hörbücher",
+    "Hoerbuch-Ordner": "Hörbuch-Ordner",
+    "Hoerbuch-Ordner …": "Hörbuch-Ordner …",
+    "Platzhalter Hoerbuecher: {book_title} {chapter} {title} {ext}":
+        "Platzhalter Hörbücher: {book_title} {chapter} {title} {ext}",
+    "{n} Aenderung(en) geplant, {u} bereits korrekt benannt.":
+        "{n} Änderung(en) geplant, {u} bereits korrekt benannt.",
+    "Titel enthielt einen Schraegstrich - wurde durch \" - \" ersetzt.":
+        "Titel enthielt einen Schrägstrich - wurde durch \" - \" ersetzt.",
 }
 EN: dict[str, str] = {}
 

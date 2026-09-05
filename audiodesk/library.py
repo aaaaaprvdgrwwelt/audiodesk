@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS items (
     year INTEGER,
     genre TEXT DEFAULT '',
     duration_ms INTEGER DEFAULT 0,
-    cover_path TEXT,
+    cover_url TEXT,
     book_title TEXT DEFAULT '',
     source TEXT DEFAULT '',
     external_id TEXT DEFAULT '',
@@ -72,7 +72,7 @@ class Item:
     year: int | None = None
     genre: str = ""
     duration_ms: int = 0
-    cover_path: str | None = None
+    cover_url: str | None = None
     book_title: str = ""
     source: str = ""
     external_id: str = ""
@@ -96,7 +96,7 @@ class Item:
 
 _COLUMNS = [
     "id", "kind", "path", "root", "title", "artist", "album", "album_artist",
-    "track_number", "year", "genre", "duration_ms", "cover_path",
+    "track_number", "year", "genre", "duration_ms", "cover_url",
     "book_title", "source", "external_id", "score", "status", "note",
     "last_position_ms",
 ]
@@ -166,15 +166,15 @@ class LibraryIndex:
 
     # --- Zuordnung --------------------------------------------------------
     def set_match(self, path: Path, title: str, artist: str, album: str,
-                  album_artist: str, year: int | None, cover_path: str | None,
+                  album_artist: str, year: int | None, cover_url: str | None,
                   source: str, external_id: str, score: int, status: str,
                   note: str = "") -> None:
         with self._lock:
             self._con.execute(
                 "UPDATE items SET title=?, artist=?, album=?, album_artist=?, "
-                "year=?, cover_path=?, source=?, external_id=?, score=?, "
+                "year=?, cover_url=?, source=?, external_id=?, score=?, "
                 "status=?, note=?, matched_at=? WHERE path=?",
-                (title, artist, album, album_artist, year, cover_path, source,
+                (title, artist, album, album_artist, year, cover_url, source,
                  external_id, score, status, note, time.time(), str(path)))
             self._con.commit()
 
@@ -183,13 +183,6 @@ class LibraryIndex:
             self._con.execute(
                 "UPDATE items SET status=?, note=? WHERE path=?",
                 (status, note, str(path)))
-            self._con.commit()
-
-    def set_cover_path(self, path: Path, cover_path: str) -> None:
-        with self._lock:
-            self._con.execute(
-                "UPDATE items SET cover_path=? WHERE path=?",
-                (cover_path, str(path)))
             self._con.commit()
 
     def set_last_position_ms(self, path: Path, position_ms: int) -> None:

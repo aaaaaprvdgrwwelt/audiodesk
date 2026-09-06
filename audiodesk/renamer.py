@@ -6,7 +6,6 @@ und auch das nur fuer die vom Nutzer bestaetigten Eintraege.
 """
 from __future__ import annotations
 
-import glob
 import re
 import shutil
 from collections import Counter

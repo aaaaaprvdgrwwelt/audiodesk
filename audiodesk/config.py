@@ -44,7 +44,7 @@ class Settings:
     volume: int = 80
 
     @classmethod
-    def load(cls, settings: QSettings) -> "Settings":
+    def load(cls, settings: QSettings) -> Settings:
         settings.beginGroup("audiodesk")
         obj = cls(
             music_roots=json.loads(settings.value("music_roots", "[]") or "[]"),

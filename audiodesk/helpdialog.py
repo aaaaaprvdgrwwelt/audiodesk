@@ -22,6 +22,24 @@ HELP_HTML = """
     unteren Fensterrand. Bei Hoerbuechern wird die Position gemerkt.</li>
 </ol>
 
+<h2>Wiedergabeleiste</h2>
+<p>Bleibt dauerhaft am unteren Fensterrand offen, kein eigenes Fenster pro
+Datei. Neben Abspielen/Pause und dem Fortschrittsregler:</p>
+<ul>
+<li><b>Warteschlange</b> - eigener Reiter. Per Rechtsklick auf einen Titel
+    oder ein Kapitel &rarr; <i>Zur Warteschlange hinzufuegen</i> oder
+    <i>Als naechstes abspielen</i> befuellen, per Ziehen umsortieren, per
+    Kontextmenue entfernen oder leeren. Ist die Warteschlange nicht leer,
+    hat sie Vorrang vor allem Folgenden.</li>
+<li><b>Zufallswiedergabe</b> - Knopf in der Leiste. Waehlt beim
+    Weiterspielen einen zufaelligen anderen Titel aus demselben Album/
+    Hoerbuch statt der Reihe nach vorzugehen.</li>
+<li><b>Wiederholen</b> - Knopf, schaltet zwischen <i>aus</i>, <i>alle</i>
+    (springt am Ende zurueck zum ersten Titel) und <i>aktueller Titel</i>
+    durch.</li>
+<li><b>Lautstaerke</b> wird ueber einen Neustart hinweg gemerkt.</li>
+</ul>
+
 <h2>Welche Quelle wofuer?</h2>
 <p>Alle vier Quellen sind optional und lassen sich einzeln unter
 <b>Einstellungen &rarr; Quellen</b> ein- und ausschalten. MusicBrainz,
@@ -70,9 +88,12 @@ ueber den Album-Tag oder sonst den Ordnernamen) gefuehrt wird.</p>
 
 <h2>Kapitelmarken bei M4B</h2>
 <p>Liegt ein Hoerbuch als eine einzelne M4B-Datei mit eingebetteten
-Kapitelmarken vor, werden diese (falls auslesbar) nicht einzeln als
-Bibliothekseintraege gefuehrt - die Datei wird als ein durchgehendes Stueck
-abgespielt.</p>
+Nero-Kapitelmarken vor (dem Format, das z. B. <code>m4b-tool</code> oder
+ffmpeg schreiben), werden diese ausgelesen und erscheinen in der
+Wiedergabeleiste als Sprungliste neben dem Titel - die Auswahl folgt
+umgekehrt auch der Wiedergabeposition. Ohne solche Marken (die meisten
+M4B-Dateien ohne Nero-Kapitel, sowie jedes andere Format) laeuft die Datei
+als ein durchgehendes Stueck, ohne Sprungmarken.</p>
 
 <h2>Umbenennen-Vorlagen</h2>
 <p>Unter <b>Einstellungen &rarr; Umbenennen</b> frei einstellbar, getrennt fuer

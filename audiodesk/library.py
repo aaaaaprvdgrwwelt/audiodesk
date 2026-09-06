@@ -13,6 +13,8 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from deskkit.backup import backup_database
+
 TRACK = "track"
 CHAPTER = "chapter"
 
@@ -119,6 +121,12 @@ class LibraryIndex:
 
     def close(self) -> None:
         self._con.close()
+
+    def backup_to(self, destination: Path) -> None:
+        """Sichert die Datenbank nach `destination` - sicher aufrufbar,
+        waehrend die App laeuft (siehe deskkit.backup)."""
+        with self._lock:
+            backup_database(self._con, destination)
 
     # --- Scannen --------------------------------------------------------
     def mark_scanned(self, path: Path, kind: str, root: Path, title: str = "",

@@ -17,6 +17,17 @@ def test_mark_scanned_inserts_track(tmp_path):
     assert tracks[0].album == "RAM"
 
 
+def test_backup_to_copies_all_items(tmp_path):
+    index = make_index(tmp_path)
+    index.mark_scanned(Path("/music/song.mp3"), TRACK, Path("/music"), title="Test")
+    destination = tmp_path / "backup" / "copy.sqlite"
+    index.backup_to(destination)
+    assert destination.exists()
+
+    restored = LibraryIndex(destination)
+    assert [t.title for t in restored.list_tracks()] == ["Test"]
+
+
 def test_mark_scanned_keeps_existing_match_on_rescan(tmp_path):
     index = make_index(tmp_path)
     path = Path("/music/song.mp3")

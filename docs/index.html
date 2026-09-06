@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AudioDesk – ein Dateimanager nur für Musik und Hörbücher</title>
+<meta name="description" content="Ein Dateimanager, der nur Audio kennt: Musik und Hörbücher sichten, hören, Metadaten holen, umbenennen. Python + Qt, Linux/Windows/macOS, Deutsch und Englisch.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta property="og:title" content="AudioDesk">
+<meta property="og:description" content="Ein Dateimanager, der nur Audio kennt: Musik und Hörbücher sichten, hören, Metadaten holen, umbenennen.">
+<meta property="og:type" content="website">
+<style>
+:root {
+  --bg: #f5fafa; --fg: #182626; --muted: #566868; --line: #d8e6e6;
+  --card: #ffffff; --accent: #1c6a7a; --accent-fg: #ffffff;
+  --code-bg: #e9f2f2; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1717; --fg: #dfeaea; --muted: #8fa6a6; --line: #223030;
+    --card: #172020; --accent: #6fc4d4; --accent-fg: #0c1616;
+    --code-bg: #1c2727; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1717; --fg: #dfeaea; --muted: #8fa6a6; --line: #223030;
+  --card: #172020; --accent: #6fc4d4; --accent-fg: #0c1616;
+  --code-bg: #1c2727; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+}
+:root[data-theme="light"] {
+  --bg: #f5fafa; --fg: #182626; --muted: #566868; --line: #d8e6e6;
+  --card: #ffffff; --accent: #1c6a7a; --accent-fg: #ffffff;
+  --code-bg: #e9f2f2; --shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+.wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+a { color: var(--accent); }
+
+header { padding: 72px 0 56px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.brand svg { width: 84px; height: 84px; flex: none; border-radius: 19px; box-shadow: var(--shadow); }
+h1 { margin: 0; font-size: clamp(2rem, 6vw, 2.9rem); letter-spacing: -.02em; }
+.tagline { margin: 18px 0 0; font-size: 1.2rem; color: var(--muted); max-width: 34em; }
+.buttons { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; }
+.btn {
+  display: inline-block; padding: 11px 20px; border-radius: 9px;
+  text-decoration: none; font-weight: 600; font-size: .96rem;
+  border: 1px solid var(--line); color: var(--fg); background: var(--card);
+}
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+
+section { padding: 52px 0; border-bottom: 1px solid var(--line); }
+section:last-of-type { border-bottom: 0; }
+h2 { font-size: 1.5rem; margin: 0 0 8px; letter-spacing: -.01em; }
+h2 + .sub { margin: 0 0 28px; color: var(--muted); }
+h3 { font-size: 1.05rem; margin: 0 0 6px; }
+
+.cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 20px; box-shadow: var(--shadow);
+}
+.card p { margin: 0; color: var(--muted); font-size: .93rem; }
+
+pre {
+  background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+  padding: 16px 18px; overflow-x: auto; font-size: .88rem; line-height: 1.6;
+}
+code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+p code, li code, td code { background: var(--code-bg); padding: .12em .38em; border-radius: 4px; font-size: .89em; }
+
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .93rem; }
+th, td { text-align: left; padding: 9px 14px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; white-space: nowrap; }
+
+.note {
+  background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0; padding: 16px 20px; margin: 26px 0 0;
+  font-size: .93rem; color: var(--muted);
+}
+.note strong { color: var(--fg); }
+
+footer { padding: 40px 0 60px; color: var(--muted); font-size: .9rem; }
+footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AudioDesk-Symbol">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1c3a4a"/><stop offset="1" stop-color="#2f7a8a"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="512" height="512" rx="114" fill="url(#bg)"/>
+        <g transform="translate(51.2,51.2) scale(6.4)">
+          <path d="M12 36 A20 20 0 0 1 52 36" fill="none" stroke="#f2f2f2" stroke-width="5" stroke-linecap="round"/>
+          <rect x="8" y="34" width="12" height="20" rx="5" fill="#f2f2f2"/>
+          <rect x="44" y="34" width="12" height="20" rx="5" fill="#d8ece8"/>
+          <circle cx="14" cy="44" r="2.4" fill="#1c3a4a"/>
+          <circle cx="50" cy="44" r="2.4" fill="#1c3a4a"/>
+          <circle cx="35" cy="20" r="4.5" fill="#e0a83c"/>
+          <rect x="38.5" y="6" width="2.6" height="15" fill="#e0a83c"/>
+          <path d="M41 6 q7 1.5 6.5 9" stroke="#e0a83c" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        </g>
+      </svg>
+      <h1>AudioDesk</h1>
+    </div>
+
+    <p class="tagline">
+      Ein Dateimanager, der nur Audio kennt: Musik und Hörbücher sichten, hören,
+      Metadaten holen, umbenennen. Eine dauerhafte Wiedergabeleiste statt einem
+      Reader-Fenster pro Datei.
+    </p>
+
+    <div class="buttons">
+      <a class="btn primary" href="https://github.com/aaaaaprvdgrwwelt/audiodesk">Auf GitHub ansehen</a>
+      <a class="btn" href="#installation">Installation</a>
+      <a class="btn" href="#quellen">Metadaten-Quellen</a>
+    </div>
+
+    <div class="note">
+      <strong>Status: nutzbar.</strong> Entwickelt und getestet unter Linux.
+      Windows und macOS sollten laufen (reines Qt/Python), sind aber nicht
+      manuell getestet — die automatisierte Testsuite läuft dort in der CI.
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>Was es kann</h2>
+    <p class="sub">Musik (Album/Track) und Hörbücher (Buch/Kapitel) in einer
+       gemeinsamen Bibliothek, Oberfläche auf Deutsch und Englisch.</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Wiedergabeleiste</h3>
+        <p>Dauerhaft am unteren Fensterrand statt Dialog pro Datei — Warteschlange,
+           Zufallswiedergabe und Wiederholen (aus/alle/aktueller Titel) inklusive.</p>
+      </div>
+      <div class="card">
+        <h3>Kapitelmarken bei M4B</h3>
+        <p>Eingebettete Nero-Kapitelmarken werden ausgelesen und erscheinen als
+           Sprungliste — kein durchgehendes Abspielen mehr ohne Struktur.</p>
+      </div>
+      <div class="card">
+        <h3>Musik- und Hörbuch-Ordner getrennt</h3>
+        <p>Eine automatische Erkennung anhand der Datei allein wäre unzuverlässig —
+           der Ordner legt fest, ob etwas als Track oder Kapitel geführt wird.</p>
+      </div>
+      <div class="card">
+        <h3>Vier Metadaten-Quellen</h3>
+        <p>MusicBrainz, Discogs und Last.fm für Musik, Apples iTunes-Suche als
+           einzige eingebaute Hörbuch-Quelle — sauber quellenweise getrennt.</p>
+      </div>
+      <div class="card">
+        <h3>Lautstärke gemerkt</h3>
+        <p>Bleibt über einen Neustart hinweg erhalten, statt jedes Mal wieder auf
+           dem Vorgabewert zu stehen.</p>
+      </div>
+      <div class="card">
+        <h3>Gezielt rescannen</h3>
+        <p>Nur ein einzelnes Album oder Hörbuch neu einlesen, statt jedes Mal die
+           ganze Bibliothek zu durchsuchen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="installation">
+  <div class="wrap">
+    <h2>Installation</h2>
+    <p class="sub">Fertige Pakete für Windows/macOS unter
+      <a href="https://github.com/aaaaaprvdgrwwelt/audiodesk/releases">Releases</a> —
+      unsigniert, deshalb beim ersten Start je einmal „Trotzdem ausführen“ (Windows)
+      bzw. Rechtsklick → Öffnen (macOS) bestätigen. Aus dem Quelltext (Linux und alle
+      anderen) reicht Python 3.10 oder neuer:</p>
+<pre><code>git clone https://github.com/aaaaaprvdgrwwelt/deskkit.git
+git clone https://github.com/aaaaaprvdgrwwelt/audiodesk.git
+cd audiodesk
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt</code></pre>
+    <p>Unter Linux zusätzlich <code>libpulse0</code> für die Wiedergabe über
+       QtMultimedia.</p>
+    <h3 style="margin-top:28px">Starten</h3>
+<pre><code>./audiodesk.sh              # oder: .venv/bin/python -m audiodesk
+./install-desktop.sh        # Eintrag im Anwendungsmenü anlegen (Linux)</code></pre>
+  </div>
+</section>
+
+<section id="quellen">
+  <div class="wrap">
+    <h2>Metadaten-Quellen</h2>
+    <p class="sub">Alle vier optional, einzeln unter Einstellungen → Quellen
+       abschaltbar. API-Keys landen im System-Schlüsselbund statt im Klartext.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Quelle</th><th>Für</th><th>Key</th></tr></thead>
+        <tbody>
+          <tr><td><strong>MusicBrainz</strong></td><td>Musik</td><td>nein, empfohlen</td></tr>
+          <tr><td><strong>Discogs</strong></td><td>Musik, Zweitquelle</td><td>ja, kostenlos</td></tr>
+          <tr><td><strong>Last.fm</strong></td><td>Musik, Zweitquelle</td><td>ja, kostenlos</td></tr>
+          <tr><td><strong>iTunes</strong></td><td>Hörbücher, einzige eingebaute Quelle</td><td>nein</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <strong>Bewusst nicht eingebaut: Audible.</strong> Keine öffentliche API — ein
+      Zugriff liefe nur über Scraping der Webseite gegen deren Nutzungsbedingungen,
+      auch nicht über importierte Skripte anderer Tools.
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Umbenennen-Vorlagen</h2>
+    <p class="sub">Getrennt für Musik und Hörbücher, frei einstellbar unter
+       Einstellungen → Umbenennen.</p>
+<pre><code>Musik:      {artist}/{album}/{track_number:02} - {title}{ext}
+Hörbücher:  {book_title}/{chapter:03} - {title}{ext}</code></pre>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Bedienung</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Kürzel</th><th>Aktion</th></tr></thead>
+        <tbody>
+          <tr><td><code>F5</code></td><td>Scannen</td></tr>
+          <tr><td><code>Strg+T</code></td><td>Automatisch zuordnen</td></tr>
+          <tr><td><code>Leertaste</code></td><td>Abspielen</td></tr>
+          <tr><td><code>Strg+R</code></td><td>Umbenennen …</td></tr>
+          <tr><td><code>Strg+S</code></td><td>Metadaten in Datei speichern …</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      MIT-Lizenz ·
+      <a href="https://github.com/aaaaaprvdgrwwelt/audiodesk">Quellcode</a> ·
+      <a href="https://github.com/aaaaaprvdgrwwelt/audiodesk/blob/main/README.md">Vollständige Dokumentation</a> ·
+      <a href="https://github.com/aaaaaprvdgrwwelt/audiodesk/issues">Fehler melden</a>
+    </p>
+    <p>Teil der <code>*desk</code>-Familie:
+       <a href="https://aaaaaprvdgrwwelt.github.io/comicdesk/">ComicDesk</a> ·
+       <a href="https://aaaaaprvdgrwwelt.github.io/moviedesk/">MovieDesk</a> ·
+       <a href="https://aaaaaprvdgrwwelt.github.io/bookdesk/">BookDesk</a>.
+       Metadaten von MusicBrainz, Discogs, Last.fm und Apples iTunes Search API.</p>
+  </div>
+</footer>
+
+</body>
+</html>
